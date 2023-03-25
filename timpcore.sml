@@ -1588,7 +1588,9 @@ fun typeof (e, globals, functions, formals) =
           end
 
       (* function [[ty]], checks type of expression given $\itenvs$ ((prototype)) 348 *)
-      | ty (AMAKE (len, init)) = raise LeftAsExercise "AMAKE"
+      | ty (AMAKE (len, init)) =
+          if eqType ((ty len), INTTY) then ARRAYTY (ty init)
+          else raise TypeError ("Length parameter must be an int")
       | ty (ASIZE a) = raise LeftAsExercise "ASIZE"
       | ty (AAT (a, i)) = raise LeftAsExercise "AAT"
       | ty (APUT (a, i, e)) = raise LeftAsExercise "APUT"
