@@ -1844,14 +1844,32 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
       | ty (LITERAL (SYM s)) = symtype
       | ty (LITERAL NIL) = unittype
       | ty (LITERAL (PAIR (h, NIL))) = (listtype (ty (LITERAL h)))
-      | ty (LITERAL (PAIR (h, t))) = raise LeftAsExercise "LITERAL/PAIR"
+      | ty (LITERAL (PAIR (h, t))) =
+        let
+          val atau = ty (LITERAL h)
+          val btau = ty (LITERAL t)
+          val ctau = (listtype atau)
+		    in
+          if eqType(ctau, btau) then btau
+          else raise TypeError "Invalid pair"
+		    end
       | ty (LITERAL (CLOSURE _)) =
           raise TypeError "impossible -- CLOSURE literal"
       | ty (LITERAL (PRIMITIVE _)) =
           raise TypeError "impossible -- PRIMITIVE literal"
-      | ty (VAR x) = raise LeftAsExercise "VAR"
+      | ty (VAR x) = find(x, Gamma)
       | ty (SET (x, e)) = raise LeftAsExercise "SET"
-      | ty (IFX (e1, e2, e3)) = raise LeftAsExercise "IFX"
+      | ty (IFX (e1, e2, e3)) = 
+        let
+          val t1 = ty e1
+          val t2 = ty e2
+          val t3 = ty e3
+        in
+          if eqType (t1, booltype) then
+            if eqType (t2, t3) then t2
+            else raise TypeError "Invalid if expression"
+          else raise TypeError "Invalid if expression"
+	      end
       | ty (WHILEX (e1, e2)) = raise LeftAsExercise "WHILE"
       | ty (BEGIN es) = raise LeftAsExercise "BEGIN"
       | ty (LETX (LET, bs, body)) = raise LeftAsExercise "LETX/LET"
@@ -1871,8 +1889,7 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
 fun typdef (d: def, Delta: kind env, Gamma: tyex env) : tyex env * string =
   case d of
     VAL (name, e) => let val etau = typeof(e, Delta, Gamma)
-          in (bind(name, etau, Gamma), typeString(etau))
-          end
+                     in  (bind(name, etau, Gamma), typeString(etau)) end
   | EXP e => typdef (VAL ("it", e), Delta, Gamma)
   | DEFINE (name, tau, lambda as (formals, body)) =>
       raise LeftAsExercise "DEFINE"
