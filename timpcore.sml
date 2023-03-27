@@ -1598,16 +1598,26 @@ fun typeof (e, globals, functions, formals) =
           | _         => raise TypeError "Invalid array"
         end
       | ty (AAT (a, i)) =
-        let  val atau = ty a
-             val itau = ty i
+        let
+          val atau = ty a
+          val itau = ty i
         in
           case atau of
             ARRAYTY x => if eqType(itau, INTTY) then x
                                  else raise TypeError "Invalid array"
           | x         => raise TypeError "Invalid array"
         end
-      | ty (APUT (a, i, e)) = raise LeftAsExercise "APUT"
-
+      | ty (APUT (a, i, e)) =
+        let
+          val atau = ty a
+          val itau = ty i
+          val etau = ty e
+        in
+          if eqType(atau, (ARRAYTY etau)) then
+            if eqType(itau, INTTY) then etau
+            else raise TypeError "Invalid array"
+          else raise TypeError "Invalid array"
+        end
     (* type declarations for consistency checking *)
     val _ = op typeof : exp * ty env * funty env * ty env -> ty
     val _ = op ty : exp -> ty
