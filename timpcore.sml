@@ -1606,14 +1606,6 @@ fun typeof (e, globals, functions, formals) =
                                  else raise TypeError "Invalid array"
           | x         => raise TypeError "Invalid array"
         end
-        (* let val atau = ty a
-            val itau = ty i
-        in
-          case atau of
-            ARRAYTY x => if eqType(itau, INTTY) then atau
-                         else raise TypeError "Invalid array"
-         |  _         => raise TypeError "Invalid array"
-        end *)
       | ty (APUT (a, i, e)) = raise LeftAsExercise "APUT"
 
     (* type declarations for consistency checking *)
