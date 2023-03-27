@@ -1,1 +1,1 @@
-make && ./tests/run-timpcore-tests.sh
+make && ./tests/run-tuscheme-tests.sh

@@ -1839,10 +1839,11 @@ val _ = op eqTypes : tyex list * tyex list -> bool
 (* type checking for {\tuscheme} ((prototype)) 366 *)
 fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
   let
-    fun ty (LITERAL (NUM n)) = raise LeftAsExercise "LITERAL/NUM"
-      | ty (LITERAL (BOOLV b)) = raise LeftAsExercise "LITERAL/BOOL"
-      | ty (LITERAL (SYM s)) = raise LeftAsExercise "LITERAL/SYM"
-      | ty (LITERAL NIL) = raise LeftAsExercise "LITERAL/NIL"
+    fun ty (LITERAL (NUM n)) = inttype
+      | ty (LITERAL (BOOLV b)) = booltype
+      | ty (LITERAL (SYM s)) = symtype
+      | ty (LITERAL NIL) = unittype
+      | ty (LITERAL (PAIR (h, NIL))) = (listtype (ty (LITERAL h)))
       | ty (LITERAL (PAIR (h, t))) = raise LeftAsExercise "LITERAL/PAIR"
       | ty (LITERAL (CLOSURE _)) =
           raise TypeError "impossible -- CLOSURE literal"
@@ -1869,7 +1870,9 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
   end
 fun typdef (d: def, Delta: kind env, Gamma: tyex env) : tyex env * string =
   case d of
-    VAL (name, e) => raise LeftAsExercise "VAL"
+    VAL (name, e) => let val etau = typeof(e, Delta, Gamma)
+          in (bind(name, etau, Gamma), typeString(etau))
+          end
   | EXP e => typdef (VAL ("it", e), Delta, Gamma)
   | DEFINE (name, tau, lambda as (formals, body)) =>
       raise LeftAsExercise "DEFINE"
