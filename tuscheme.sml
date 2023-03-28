@@ -1877,7 +1877,14 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
             else raise TypeError "Invalid if expression"
           else raise TypeError "Invalid if expression"
 	      end
-      | ty (WHILEX (e1, e2)) = raise LeftAsExercise "WHILE"
+      | ty (WHILEX (e1, e2)) =
+        let
+          val t1 = ty e1
+          val t2 = ty e2
+        in 
+          if eqType(t1, booltype) then unittype 
+          else raise TypeError "Invalid while expression"
+        end
       | ty (BEGIN es) =
         let
           val taus = map ty es 
