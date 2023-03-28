@@ -1950,8 +1950,23 @@ fun typdef (d: def, Delta: kind env, Gamma: tyex env) : tyex env * string =
                      in  (bind(name, etau, Gamma), typeString(etau)) end
   | EXP e => typdef (VAL ("it", e), Delta, Gamma)
   | DEFINE (name, tau, lambda as (formals, body)) =>
-      raise LeftAsExercise "DEFINE"
-  | VALREC (name, tau, e) => raise LeftAsExercise "VALREC"
+      let
+        val ltau = typeof((LAMBDA (formals, body)), Delta, Gamma)
+        val (names, etaus) = ListPair.unzip formals
+        val gammas = bindList(names, etaus, Gamma)
+      in
+        if eqType(tau, (typeof (body, Delta, gammas))) then
+          typdef((VALREC(name, ltau, (LAMBDA (formals, body)))), Delta, gammas)
+        else raise TypeError "Invalid define expression"
+      end
+  | VALREC (name, tau, e) =>
+    let
+      val gamma = bind(name, tau, Gamma)
+			val etau = typeof(e, Delta, gamma)
+		in 
+      if eqType(etau, tau) then (gamma, typeString(tau))
+      else raise TypeError "Invalid valrec expression"
+		end
 (* type declarations for consistency checking *)
 val _ = op typdef : def * kind env * tyex env -> tyex env * string
 
