@@ -1911,8 +1911,23 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
           else typeof((LETX (LETSTAR, (tl bs), body)), Delta, gamma)
         end
       | ty (LETRECX (bs, body)) = raise LeftAsExercise "LETRECX"
-      | ty (LAMBDA (formals, body)) = raise LeftAsExercise "LAMBDA"
-      | ty (APPLY (f, actuals)) = raise LeftAsExercise "APPLY"
+      | ty (LAMBDA (formals, body)) =
+        let
+          val (names, etaus) = ListPair.unzip formals
+          val gamma = bindList(names, etaus, Gamma)
+          val btau = typeof(body, Delta, gamma)
+        in 
+          FUNTY (etaus, btau)
+        end
+      | ty (APPLY (f, actuals)) =
+        let
+          val ataus = map ty actuals
+          val ftau = ty f
+        in
+          case ftau of
+            FUNTY (args, rtau) => if eqType(ftau, (FUNTY (ataus,  rtau))) then rtau else raise TypeError "Invalid apply expression"
+          | p                  => raise TypeError "Invalid apply expression"
+        end
       | ty (TYLAMBDA (alphas, e)) = raise LeftAsExercise "TYLAMBDA"
       | ty (TYAPPLY (e, args)) = raise LeftAsExercise "TYAPPLY"
 
