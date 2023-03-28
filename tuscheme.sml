@@ -1893,8 +1893,23 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
               (lt, [])     => lt
             | (lt, (h::t)) => beginRecurse(h, t)
         in beginRecurse(unittype, taus) end
-      | ty (LETX (LET, bs, body)) = raise LeftAsExercise "LETX/LET"
-      | ty (LETX (LETSTAR, bs, body)) = raise LeftAsExercise "LETX/LETSTAR"
+      | ty (LETX (LET, bs, body)) =
+        typeof(body, Delta,
+          bindList(
+            map(fn(x,e) => x) bs,
+            map(fn(x, e) => typeof(e, Delta, Gamma)) bs,
+            Gamma
+          ))
+      | ty (LETX (LETSTAR, bs, body)) =
+        let
+          val (names, expressions) = ListPair.unzip bs
+          val name = (hd names)
+          val etau = (ty (hd expressions))
+          val gamma =  bind(name, etau, Gamma) 
+        in
+          if (length bs) < 2 then typeof((LETX (LET, bs, body)), Delta, Gamma)
+          else typeof((LETX (LETSTAR, (tl bs), body)), Delta, gamma)
+        end
       | ty (LETRECX (bs, body)) = raise LeftAsExercise "LETRECX"
       | ty (LAMBDA (formals, body)) = raise LeftAsExercise "LAMBDA"
       | ty (APPLY (f, actuals)) = raise LeftAsExercise "APPLY"
