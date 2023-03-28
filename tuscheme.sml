@@ -1928,8 +1928,15 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
             FUNTY (args, rtau) => if eqType(ftau, (FUNTY (ataus,  rtau))) then rtau else raise TypeError "Invalid apply expression"
           | p                  => raise TypeError "Invalid apply expression"
         end
-      | ty (TYLAMBDA (alphas, e)) = raise LeftAsExercise "TYLAMBDA"
-      | ty (TYAPPLY (e, args)) = raise LeftAsExercise "TYAPPLY"
+      | ty (TYLAMBDA (alphas, e)) =
+        let
+          fun recurseLambda nil delta   = delta
+            | recurseLambda alpha delta = recurseLambda (tl alpha) (bind((hd alpha), TYPE, delta))
+          val dprime = recurseLambda alphas Delta
+        in
+          FORALL(alphas, typeof(e, dprime, Gamma))
+        end
+      | ty (TYAPPLY (e, args)) = instantiate((ty e), args, Delta)
 
     (* type declarations for consistency checking *)
     val _ = op ty : exp -> tyex
