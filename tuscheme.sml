@@ -1858,7 +1858,14 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
       | ty (LITERAL (PRIMITIVE _)) =
           raise TypeError "impossible -- PRIMITIVE literal"
       | ty (VAR x) = find(x, Gamma)
-      | ty (SET (x, e)) = raise LeftAsExercise "SET"
+      | ty (SET (x, e)) =
+        let
+          val  xtau = ty (VAR x)
+          val  etau = ty e
+        in
+          if eqType(xtau, etau) then xtau
+          else raise TypeError "Invalid set expression"
+        end
       | ty (IFX (e1, e2, e3)) = 
         let
           val t1 = ty e1
@@ -1871,7 +1878,14 @@ fun typeof (e: exp, Delta: kind env, Gamma: tyex env) : tyex =
           else raise TypeError "Invalid if expression"
 	      end
       | ty (WHILEX (e1, e2)) = raise LeftAsExercise "WHILE"
-      | ty (BEGIN es) = raise LeftAsExercise "BEGIN"
+      | ty (BEGIN es) =
+        let
+          val taus = map ty es 
+          fun beginRecurse (lastType: tyex, listTypes: tyex list) =
+            case (lastType, listTypes) of
+              (lt, [])     => lt
+            | (lt, (h::t)) => beginRecurse(h, t)
+        in beginRecurse(unittype, taus) end
       | ty (LETX (LET, bs, body)) = raise LeftAsExercise "LETX/LET"
       | ty (LETX (LETSTAR, bs, body)) = raise LeftAsExercise "LETX/LETSTAR"
       | ty (LETRECX (bs, body)) = raise LeftAsExercise "LETRECX"
